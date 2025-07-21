@@ -143,6 +143,7 @@ assign SDRAM2_nWE = 1;
 
 `include "build_id.v"
 
+
 //           1111111111222222222233333333334444444444555555555566
 // 01234567890123456789012345678901234567890123456789012345678901
 // 0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz
@@ -150,8 +151,10 @@ assign SDRAM2_nWE = 1;
 localparam CONF_STR = {
 	"GALAGA;;",
 	"O2,Rotate Controls,Off,On;",
+`ifndef A35T	
 	"OWX,Orientation,Vertical,Clockwise,Anticlockwise;",
 	"OY,Rotation filter,Off,On;",
+`endif
 	"O34,Scanlines,Off,25%,50%,75%;",
 	"O5,Blend,Off,On;",
 	"O6,Flip screen,Off,On;",
@@ -170,7 +173,11 @@ wire        blend     = status[5];
 wire        flip      = status[6];
 wire        selftest  = status[7];
 wire        service   = status[1];
+`ifndef A35T
 wire  [1:0] rotate_screen = status[33:32];
+`else
+wire  [1:0] rotate_screen = 2'b0;
+`endif
 wire        rotate_filter = status[34];
 
 wire  [7:0] dipa      = ~status[15:8];
@@ -180,6 +187,16 @@ assign LED = 1;
 assign AUDIO_R = AUDIO_L;
 
 wire clk_18, clk_36, clk_72, pll_locked;
+`ifdef USE_CLOCK_50
+pll pll(
+	.inclk0(CLOCK_50),
+	.areset(0),
+	.locked(pll_locked),
+	.c0(clk_72),// 72 mhz
+	.c1(clk_18),// 18 mhz
+	.c2(clk_36) // 36 mhz
+	);
+`else
 pll pll(
 	.inclk0(CLOCK_27),
 	.c0(clk_72),
@@ -187,6 +204,7 @@ pll pll(
 	.c2(clk_18),
 	.locked(pll_locked)
 	);
+`endif
 
 assign SDRAM_CLK = clk_72;
 assign SDRAM_CKE = 1;

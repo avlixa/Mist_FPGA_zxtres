@@ -734,10 +734,10 @@ spflips <= 	"0000000"                       & spflip_V & spflip_2H & spflip_V & 
 -- set graphics rom address (external) from sprite code, flip mask, sprite size (2xV, 2xH), sprite horizontal tile and vertical line 
 -- rom data will be latch within sprite machine loop at sprite_state = "010" and sprite_state = "011"  
 with sprite_attr(1 downto 0) select
-sp_grphx_addr <=  (sp_code_ext(8 downto 0)                                     & sprite_vcnt(3) & sprite_hcnt_a(3 downto 2) & sprite_vcnt(2 downto 0) ) xor spflips when "00",
-									(sp_code_ext(8 downto 1) & 						      sprite_hcnt_a(4) & sprite_vcnt(3) & sprite_hcnt_a(3 downto 2) & sprite_vcnt(2 downto 0) ) xor spflips when "01",
-									(sp_code_ext(8 downto 2) & sprite_vcnt(4) & sp_code_ext(0)   & sprite_vcnt(3) & sprite_hcnt_a(3 downto 2) & sprite_vcnt(2 downto 0) ) xor spflips when "10",
-									(sp_code_ext(8 downto 2) & sprite_vcnt(4) & sprite_hcnt_a(4) & sprite_vcnt(3) & sprite_hcnt_a(3 downto 2) & sprite_vcnt(2 downto 0) ) xor spflips when others;
+sp_grphx_addr <=  (sp_code_ext(8 downto 0)                                     & sprite_vcnt(3) & sprite_hcnt_a(3 downto 2) & sprite_vcnt(2 downto 0) ) xor ("00" & spflips) when "00",
+									(sp_code_ext(8 downto 1) & 						      sprite_hcnt_a(4) & sprite_vcnt(3) & sprite_hcnt_a(3 downto 2) & sprite_vcnt(2 downto 0) ) xor ("00" & spflips) when "01",
+									(sp_code_ext(8 downto 2) & sprite_vcnt(4) & sp_code_ext(0)   & sprite_vcnt(3) & sprite_hcnt_a(3 downto 2) & sprite_vcnt(2 downto 0) ) xor ("00" & spflips) when "10",
+									(sp_code_ext(8 downto 2) & sprite_vcnt(4) & sprite_hcnt_a(4) & sprite_vcnt(3) & sprite_hcnt_a(3 downto 2) & sprite_vcnt(2 downto 0) ) xor ("00" & spflips) when others;
 
 -- set palette rom address with sprite color_set and serialized sprite graphics (1.5byte => 3bits) with respect to horizontal flip cmd
 sp_palette_addr <= sprite_color(5 downto 0) &
@@ -862,12 +862,12 @@ begin
 		bg_color_delay_5 <= bg_color_delay_5(6 downto 0) & bg_palette_msb_do(1);
 		
 		-- select delay line output to finish bg horizontal scrolling with respect to 3 lsb bits
-		bg_color(0) <= bg_color_delay_0(to_integer(unsigned(bg_mask xor bg_offset_hs(2 downto 0))));
-		bg_color(1) <= bg_color_delay_1(to_integer(unsigned(bg_mask xor bg_offset_hs(2 downto 0))));
-		bg_color(2) <= bg_color_delay_2(to_integer(unsigned(bg_mask xor bg_offset_hs(2 downto 0))));
-		bg_color(3) <= bg_color_delay_3(to_integer(unsigned(bg_mask xor bg_offset_hs(2 downto 0))));
-		bg_color(4) <= bg_color_delay_4(to_integer(unsigned(bg_mask xor bg_offset_hs(2 downto 0))));
-		bg_color(5) <= bg_color_delay_5(to_integer(unsigned(bg_mask xor bg_offset_hs(2 downto 0))));
+		bg_color(0) <= bg_color_delay_0(to_integer(unsigned(bg_mask xor ("000000" & bg_offset_hs(2 downto 0)))));
+		bg_color(1) <= bg_color_delay_1(to_integer(unsigned(bg_mask xor ("000000" & bg_offset_hs(2 downto 0)))));
+		bg_color(2) <= bg_color_delay_2(to_integer(unsigned(bg_mask xor ("000000" & bg_offset_hs(2 downto 0)))));
+		bg_color(3) <= bg_color_delay_3(to_integer(unsigned(bg_mask xor ("000000" & bg_offset_hs(2 downto 0)))));
+		bg_color(4) <= bg_color_delay_4(to_integer(unsigned(bg_mask xor ("000000" & bg_offset_hs(2 downto 0)))));
+		bg_color(5) <= bg_color_delay_5(to_integer(unsigned(bg_mask xor ("000000" & bg_offset_hs(2 downto 0)))));
 		-- set fg color or transparent color with respect to fg serialized graphic bit
 		if fg_bit = '1' then
 			fg_color <= "0"&fg_attr(1 downto 0) & fg_attr(5 downto 2);

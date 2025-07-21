@@ -162,6 +162,9 @@ localparam CONF_STR = {
 	"V,v1.00.",`BUILD_DATE
 };
 
+wire [63:0] status;
+wire  [1:0] buttons;
+
 wire        rotate    = status[2];
 wire  [1:0] scanlines = status[4:3];
 wire        blend     = status[5];
@@ -170,6 +173,9 @@ wire  [7:0] dipB      = status[23:16];
 wire  [1:0] rotate_screen = status[33:32];
 wire        rotate_filter = status[34];
 
+wire        ioctl_downl;
+wire clk_18, clk_36, clk_72;
+
 wire  [6:0] core_mod;
 
 assign LED = ~ioctl_downl;
@@ -177,8 +183,18 @@ assign AUDIO_R = AUDIO_L;
 assign SDRAM_CLK = clk_72;
 assign SDRAM_CKE = 1;
 
-wire clk_18, clk_36, clk_72;
+//wire clk_18, clk_36, clk_72;
 wire pll_locked;
+`ifdef USE_CLOCK_50
+pll pll(
+	.inclk0(CLOCK_50),
+	.areset(0),
+	.locked(pll_locked),
+	.c0(clk_72),// 72 mhz
+	.c1(clk_18),// 18 mhz
+	.c2(clk_36) // 36 mhz
+	);
+`else
 pll pll(
 	.inclk0(CLOCK_27),
 	.c0(clk_72),
@@ -186,6 +202,7 @@ pll pll(
 	.c2(clk_36),
 	.locked(pll_locked)
 	);
+`endif
 
 wire        clk_sys = clk_18;
 wire        clk_mem = clk_72;
@@ -212,8 +229,8 @@ always @(posedge clk_sys) begin
 	reset <= status[0] | buttons[1] | ioctl_downl | ~rom_loaded;
 end
 
-wire [63:0] status;
-wire  [1:0] buttons;
+//wire [63:0] status;
+//wire  [1:0] buttons;
 wire  [1:0] switches;
 wire  [31:0] joystick_0;
 wire  [31:0] joystick_1;
@@ -268,7 +285,7 @@ user_io(
 	.status         (status         )
 	);
 
-wire        ioctl_downl;
+//wire        ioctl_downl;
 wire  [7:0] ioctl_index;
 wire        ioctl_wr;
 wire [24:0] ioctl_addr;

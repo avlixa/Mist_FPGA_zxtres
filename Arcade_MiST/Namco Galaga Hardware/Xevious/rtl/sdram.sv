@@ -24,7 +24,7 @@
 module sdram (
 
 	// interface to the MT48LC16M16 chip
-	inout  reg [15:0] SDRAM_DQ,   // 16 bit bidirectional data bus
+	inout  wire [15:0] SDRAM_DQ,   // 16 bit bidirectional data bus
 	output reg [12:0] SDRAM_A,    // 13 bit multiplexed address bus
 	output reg        SDRAM_DQML, // two byte masks
 	output reg        SDRAM_DQMH, // two byte masks
@@ -57,7 +57,7 @@ module sdram (
 	input      [23:1] port1_a,
 	input       [1:0] port1_ds,
 	input      [15:0] port1_d,
-	output     [15:0] port1_q,
+	output reg [15:0] port1_q,
 
 	input      [16:1] sp1_addr,
 	output reg [15:0] sp1_q,
@@ -70,7 +70,7 @@ module sdram (
 	input      [23:1] port2_a,
 	input       [1:0] port2_ds,
 	input      [15:0] port2_d,
-	output     [15:0] port2_q
+	output reg [15:0] port2_q
 );
 
 parameter MHZ = 80; // 80 MHz default clock, adjust to calculate the refresh rate correctly
@@ -236,11 +236,14 @@ always @(*) begin
 	end
 end
 
+reg [15:0] SDRAM_DQ_reg;
+assign SDRAM_DQ = SDRAM_DQ_reg;
+
 always @(posedge clk) begin
 
 	// permanently latch ram data to reduce delays
-	sd_din <= SDRAM_DQ;
-	SDRAM_DQ <= 16'bZZZZZZZZZZZZZZZZ;
+	sd_din <= SDRAM_DQ_reg;
+	SDRAM_DQ_reg <= 16'bZZZZZZZZZZZZZZZZ;
 	{ SDRAM_DQMH, SDRAM_DQML } <= 2'b11;
 	sd_cmd <= CMD_NOP;  // default: idle
 	refresh_cnt <= refresh_cnt + 1'd1;
@@ -322,7 +325,7 @@ always @(posedge clk) begin
 			sd_cmd <= we_latch[0]?CMD_WRITE:CMD_READ;
 			{ SDRAM_DQMH, SDRAM_DQML } <= ~ds[0];
 			if (we_latch[0]) begin
-				SDRAM_DQ <= din_latch[0];
+				SDRAM_DQ_reg <= din_latch[0];
 				port1_ack <= port1_req;
 			end
 			SDRAM_A <= { 4'b0010, addr_latch[0][9:1] };  // auto precharge
@@ -333,7 +336,7 @@ always @(posedge clk) begin
 			sd_cmd <= we_latch[1]?CMD_WRITE:CMD_READ;
 			{ SDRAM_DQMH, SDRAM_DQML } <= ~ds[1];
 			if (we_latch[1]) begin
-				SDRAM_DQ <= din_latch[1];
+				SDRAM_DQ_reg <= din_latch[1];
 				port2_ack <= port2_req;
 			end
 			SDRAM_A <= { 4'b0010, addr_latch[1][9:1] };  // auto precharge
